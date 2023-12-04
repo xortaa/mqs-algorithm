@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script defer src="mqs.js"></script>
+  </head>
+  <body>
+    <h1>MQS</h1>
+    <label for="noOfTasks">Enter number of tasks: </label>
+    <input type="number" id="noOfTasks" placeholder="Enter number of tasks" />
+    <button onclick="scheduleMQS()">Schedule Tasks</button>
+    <h1 id="result">Result</h1>
+
+    <script>
+      const noOfTasksInput = document.querySelector("#noOfTasks")
+      const result = document.querySelector("#result")
+
+      function scheduleMQS() {
+        const noOfTasks = parseInt(noOfTasksInput.value)
+
+        class Task {
+          constructor(name, priority) {
+            this.name = name
+            this.priority = priority
+          }
+        }
+
+        class PriorityQueue {
+          constructor() {
+            this.queue = []
+          }
+
+          enqueue(item) {
+            if (this.isEmpty()) {
+              this.queue.push(item)
+            } else {
+              let added = false
+              for (let i = 0; i < this.queue.length; i++) {
+                if (item.priority < this.queue[i].priority) {
+                  this.queue.splice(i, 0, item)
+                  added = true
+                  break
+                }
+              }
+              if (!added) {
+                this.queue.push(item)
+              }
+            }
+          }
+
+          dequeue() {
+            if (this.isEmpty()) {
+              return "Underflow"
+            }
+            return this.queue.shift()
+          }
+
+          isEmpty() {
+            return this.queue.length === 0
+          }
+        }
+
+        function multilevelQueueScheduling(priorityQueue) {
+          let resultMessage = ""
+          while (!priorityQueue.isEmpty()) {
+            let task = priorityQueue.dequeue()
+            resultMessage += `Processing task: ${task.name} with priority: ${task.priority}<br>`
+          }
+          return resultMessage || "No tasks to schedule."
+        }
+
+        let tasks = []
+        let priorityQueue = new PriorityQueue()
+
+        for (let i = 0; i < noOfTasks; i++) {
+          const name = prompt(`Enter name of task ${i + 1}: `)
+          const priority = prompt(`Enter priority of task ${i + 1}: `)
+          tasks.push(new Task(name, priority))
+        }
+
+        for (let i = 0; i < tasks.length; i++) {
+          priorityQueue.enqueue(tasks[i])
+        }
+
+        const schedulingResult = multilevelQueueScheduling(priorityQueue)
+
+        result.innerHTML = schedulingResult || "Tasks scheduled successfully."
+      }
+    </script>
+  </body>
+</html>
