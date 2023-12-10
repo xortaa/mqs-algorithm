@@ -12,18 +12,22 @@
     <input type="number" id="noOfTasks" placeholder="Enter number of tasks" />
     <button onclick="scheduleMQS()">Schedule Tasks</button>
     <h1 id="result">Result</h1>
+    <h2 id="awt">Average Waiting Time</h2>
 
     <script>
       const noOfTasksInput = document.querySelector("#noOfTasks")
       const result = document.querySelector("#result")
+      const awt = document.querySelector("#awt")
 
       function scheduleMQS() {
         const noOfTasks = parseInt(noOfTasksInput.value)
 
         class Task {
-          constructor(name, priority) {
+          constructor(name, priority, arrivalTime, burstTime) {
             this.name = name
             this.priority = priority
+            this.arrivalTime = arrivalTime
+            this.burstTime = burstTime
           }
         }
 
@@ -33,20 +37,19 @@
           }
 
           enqueue(item) {
-            if (this.isEmpty()) {
+            let added = false
+            for (let i = 0; i < this.queue.length; i++) {
+              if (
+                item.priority < this.queue[i].priority ||
+                (item.priority === this.queue[i].priority && item.arrivalTime < this.queue[i].arrivalTime)
+              ) {
+                this.queue.splice(i, 0, item)
+                added = true
+                break
+              }
+            }
+            if (!added) {
               this.queue.push(item)
-            } else {
-              let added = false
-              for (let i = 0; i < this.queue.length; i++) {
-                if (item.priority < this.queue[i].priority) {
-                  this.queue.splice(i, 0, item)
-                  added = true
-                  break
-                }
-              }
-              if (!added) {
-                this.queue.push(item)
-              }
             }
           }
 
@@ -64,11 +67,28 @@
 
         function multilevelQueueScheduling(priorityQueue) {
           let resultMessage = ""
+          let awtMessage = ""
+          let currentTime = 0
+          let totalWaitingTime = 0
+          let tasksProcessed = 0
+
           while (!priorityQueue.isEmpty()) {
             let task = priorityQueue.dequeue()
             resultMessage += `Processing task: ${task.name} with priority: ${task.priority}<br>`
+            if (currentTime < task.arrivalTime) {
+              currentTime = task.arrivalTime
+            }
+
+            let waitingTime = currentTime - task.arrivalTime
+            totalWaitingTime += waitingTime
+            currentTime += task.burstTime
+            tasksProcessed++
           }
-          return resultMessage || "No tasks to schedule."
+
+          let averageWaitingTime = totalWaitingTime / tasksProcessed
+          awtMessage += `Average waiting time: ${averageWaitingTime}`
+
+          return { resultMessage, awtMessage }
         }
 
         let tasks = []
@@ -77,7 +97,9 @@
         for (let i = 0; i < noOfTasks; i++) {
           const name = prompt(`Enter name of task ${i + 1}: `)
           const priority = prompt(`Enter priority of task ${i + 1}: `)
-          tasks.push(new Task(name, priority))
+          const arrivalTime = prompt(`Enter arrival time of task ${i + 1}: `)
+          const burstTime = prompt(`Enter burst time of task ${i + 1}: `)
+          tasks.push(new Task(name, priority, Number(arrivalTime), Number(burstTime)))
         }
 
         for (let i = 0; i < tasks.length; i++) {
@@ -86,7 +108,8 @@
 
         const schedulingResult = multilevelQueueScheduling(priorityQueue)
 
-        result.innerHTML = schedulingResult || "Tasks scheduled successfully."
+        result.innerHTML = schedulingResult.resultMessage || "Tasks scheduled successfully."
+        awt.innerHTML = schedulingResult.awtMessage || ""
       }
     </script>
   </body>
